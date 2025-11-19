@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Exemplo GoF Funcional</title>
+</head>
+<body>
+
+<h2>Exemplo Web com Padrões GoF usando apenas funções</h2>
+<button onclick="executarPrograma()">Calcular Frete</button>
+
+<script>
+/* -------------------------------------------------
+   STRATEGY — Estratégias de cálculo
+   Troca o algoritmo de frete a depender do input em tempo de execução
+--------------------------------------------------- */
+function freteNormal(valor) {
+    return (valor * 0.10).toFixed(2);
+}
+
+function freteExpresso(valor) {
+    return (valor * 0.30).toFixed(2);
+}
+
+/* -------------------------------------------------
+   FACTORY METHOD — devolve a função de cálculo certa   
+   Passa a lógica correta por meio por meio do if (condicional)
+--------------------------------------------------- */
+function criarEstrategia(tipo) {
+    if (tipo === "normal") return freteNormal;
+    if (tipo === "expresso") return freteExpresso;
+
+    alert("Tipo de frete inválido!");
+    throw new Error("Estratégia desconhecida: " + tipo);
+}
+
+/* -------------------------------------------------
+   OBSERVER — função que reage ao cálculo
+   Depois de o calculo ser realizado, finalmente o resultado é exibido
+--------------------------------------------------- */
+function notificarFrete(listaNotificacoes, dados) {
+    listaNotificacoes.push(dados);
+
+    alert(
+        "Notificação automática\n" +
+        "Tipo: " + dados.tipo + "\n" +
+        "Valor base: R$ " + dados.valor + "\n" +
+        "Frete calculado: R$ " + dados.resultado
+    );
+}
+
+
+function calcularFrete(tipo, valor, funçãoNotificar, listaNotificacoes) {
+    const estrategia = criarEstrategia(tipo);
+    const resultado = estrategia(valor);
+
+    funçãoNotificar(listaNotificacoes, {
+        tipo,
+        valor,
+        resultado
+    });
+
+    return resultado;
+}
+
+/* -------------------------------------------------
+   TDD — Testes usando apenas funções
+--------------------------------------------------- */
+function executarTestes() {
+    console.log("Executando testes (funcionais)...");
+
+    // Teste 1 — Normal
+    (function() {
+        const resultado = freteNormal(100);
+        console.assert(resultado === 10, "Erro: Frete normal deveria ser 10");
+    })();
+
+    // Teste 2 — Expresso
+    (function() {
+        const resultado = freteExpresso(100);
+        console.assert(resultado === 30, "Erro: Frete expresso deveria ser 30");
+    })();
+
+    // Teste 3 — Observer
+    (function() {
+        const notificacoes = [];
+        calcularFrete("normal", 50, notificarFrete, notificacoes);
+
+        console.assert(notificacoes.length === 1,
+            "Erro: Observer não recebeu notificação");
+    })();
+
+    console.log("Testes finalizados com sucesso!");
+}
+
+executarTestes();
+
+function executarPrograma() {
+    const tipo = prompt("Digite o tipo de frete (normal ou expresso):");
+    if (!tipo) return;
+
+    const valor = parseFloat(prompt("Digite o valor do produto:"));
+    if (isNaN(valor) || valor <0) {
+        alert("Valor inválido!");
+        return;
+    }
+
+    const registro = [];
+
+    const resultado = calcularFrete(
+        tipo.toLowerCase(),
+        valor,
+        notificarFrete,
+        registro
+    );
+
+    alert("Resultado final:\nFrete calculado: R$ " + resultado);
+}
+</script>
+
+</body>
+</html>
